@@ -1,5 +1,4 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
-use bevy_spatial::SpatialAccess;
 
 use crate::game::debri::components::NNTree;
 

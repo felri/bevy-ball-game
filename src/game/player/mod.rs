@@ -17,13 +17,8 @@ impl Plugin for PlayerPlugin {
             .add_systems(OnEnter(AppState::Game), spawn_player)
             // Systems
             .add_systems(
-                Update,
-                (
-                    player_movement,
-                    confine_player_movement,
-                    enemy_hit_player,
-                    player_hit_star,
-                )
+                FixedUpdate,
+                (orbit_system,)
                     .run_if(in_state(AppState::Game))
                     .run_if(in_state(SimulationState::Running)),
             )

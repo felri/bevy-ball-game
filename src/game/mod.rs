@@ -42,8 +42,8 @@ impl Plugin for GamePlugin {
             .add_plugins((
                 // EnemyPlugin,
                 ProjectilePlugin,
-                TargetPlugin,
                 PlayerPlugin,
+                TargetPlugin,
                 ScorePlugin,
                 DebriPlugin,
                 CollectorPlugin,

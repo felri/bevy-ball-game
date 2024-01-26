@@ -2,6 +2,7 @@ pub mod events;
 mod game;
 mod main_menu;
 mod systems;
+mod quadtree;
 
 use bevy_pancam::PanCamPlugin;
 use game::GamePlugin;

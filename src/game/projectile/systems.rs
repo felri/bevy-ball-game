@@ -12,11 +12,13 @@ pub fn projectile_movement(
     mut projectile_query: Query<(&mut Transform, &Projectile)>,
     time: Res<Time>,
 ) {
-    for (mut transform, projectile) in projectile_query.iter_mut() {
-        let direction = projectile.target - transform.translation;
-        let velocity = direction.normalize() * time.delta_seconds() * 500.0;
-        transform.translation += velocity;
-    }
+    projectile_query
+        .par_iter_mut()
+        .for_each(|(mut transform, projectile)| {
+            let direction = projectile.target - transform.translation;
+            let velocity = direction.normalize() * time.delta_seconds() * 500.0;
+            transform.translation += velocity;
+        });
 }
 
 pub fn despawn_projectile(
