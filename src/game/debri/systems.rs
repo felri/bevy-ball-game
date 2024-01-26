@@ -33,6 +33,7 @@ pub fn build_or_update_quadtree(
 pub fn update_debri(
     mut query: Query<(Entity, &Transform, &mut Collider, &mut Velocity)>,
     universe: Res<DebriUniverse>,
+    time: Res<Time>,
 ) {
     let mut query_time: u128 = 0;
     query
@@ -102,6 +103,14 @@ pub fn update_debri(
                 new_velocity.y *= -1.0;
             }
 
+            // -------------------- Damping --------------------
+            let delta_time = universe.speed * time.delta_seconds();
+            let mut damping = velocity.damping * delta_time;
+            if new_velocity.length() < velocity.min_speed {
+                damping *= 0.1;
+            }
+            new_velocity -= new_velocity.normalize() * damping;
+
             // finally set the new velocity
             velocity.value = new_velocity;
         });
@@ -137,71 +146,6 @@ pub fn render_quadtree(_commands: Commands, universe: ResMut<DebriUniverse>, mut
         gizmos.line(top_left, bottom_left, Color::WHITE);
     })
 }
-// pub fn debri_movement(
-//     mut commands: Commands,
-//     mut debri_query: Query<(
-//         Entity,
-//         &mut Transform,
-//         &mut Debri,
-//         Option<&Collected>,
-//         Option<&Collider>,
-//     )>,
-//     time: Res<Time>,
-// ) {
-//     let mut rng = rand::thread_rng();
-
-//     for (entity, mut transform, mut debri, collected, collider) in debri_query.iter_mut() {
-//         if let Some(_) = collected {
-//             commands.entity(entity).despawn();
-//             continue;
-//         }
-
-//         if let Some(_) = collider {
-//             continue;
-//         }
-
-//         debri.time_alive += time.delta_seconds();
-
-//         // If the velocity is too small, skip this debris
-//         if debri.velocity.length() < 1.0 {
-//             commands.entity(entity).insert(Collider);
-//             continue;
-//         }
-
-//         // Delay the start of deceleration
-//         if debri.time_alive > 1.0 {
-//             // Increased from 0.5 to 1.0 seconds
-//             debri.start_deceleration = true;
-//         }
-
-//         if debri.start_deceleration {
-//             let deceleration_rate = rng.gen_range(200.0..900.0); // Reduced max range
-//             let velocity_copy = debri.velocity.clone();
-//             debri.velocity -= velocity_copy.normalize() * deceleration_rate * time.delta_seconds();
-//         }
-
-//         // Apply less frequent random direction change
-//         if rng.gen_bool(0.05) {
-//             // 10% chance each frame to change direction
-//             let angle: f32 = rng.gen_range(-10.0f32..10.0f32).to_radians(); // Reduced angle variation
-//             let new_velocity = rotate_vector(debri.velocity, angle);
-//             debri.velocity = new_velocity;
-//         }
-
-//         if debri.velocity.x != 0.0 || debri.velocity.y != 0.0 {
-//             transform.translation.x += debri.velocity.x * time.delta_seconds();
-//             transform.translation.y += debri.velocity.y * time.delta_seconds();
-//         }
-//     }
-// }
-// // Function to rotate a vector by a given angle
-// fn rotate_vector(vec: Vec2, angle: f32) -> Vec2 {
-//     let (sin_angle, cos_angle) = angle.sin_cos();
-//     Vec2::new(
-//         cos_angle * vec.x - sin_angle * vec.y,
-//         sin_angle * vec.x + cos_angle * vec.y,
-//     )
-// }
 
 pub fn despawn_debri(mut commands: Commands, projectile_query: Query<Entity, With<Debri>>) {
     for entity in projectile_query.iter() {
@@ -216,14 +160,13 @@ pub fn spawn_debri(
     mut events: EventReader<SpawnDebri>,
 ) {
     for event in events.read() {
-        let mut rng = rand::thread_rng();
         let position = event.position.clone();
         let direction = event.direction;
-        let initial_speed = 200.0 + rand::random::<f32>() * 200.0;
+        let initial_speed = 200.0;
         // Negate and normalize the direction for debris velocity
         let velocity = Vec3::new(
-            (rand::random::<f32>() - 0.5) * initial_speed,
-            (rand::random::<f32>() - 0.5) * initial_speed,
+            -direction.x * initial_speed,
+            -direction.y * initial_speed,
             0.0,
         );
 
@@ -232,8 +175,7 @@ pub fn spawn_debri(
                 // texture: assets.load("boid.png"),
                 mesh: meshes
                     .add(Mesh::from(shape::Quad::new(Vec2::new(
-                        DEBRI_SIZE,
-                        DEBRI_SIZE / 2.0,
+                        DEBRI_SIZE, DEBRI_SIZE,
                     ))))
                     .into(),
                 material: materials.add(ColorMaterial::from(Color::rgb(2., 2., 0.))),
@@ -242,7 +184,11 @@ pub fn spawn_debri(
                 ..Default::default()
             })
             .insert(Debri)
-            .insert(Velocity { value: velocity })
+            .insert(Velocity {
+                value: velocity,
+                damping: 50.0,
+                min_speed: 50.0,
+            })
             .insert(Collider::new(DEBRI_SIZE));
     }
 }

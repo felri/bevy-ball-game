@@ -15,7 +15,7 @@ use bevy::time::common_conditions::on_timer;
 
 use bevy::prelude::*;
 
-pub const DEBRI_SIZE: f32 = 3.0;
+pub const DEBRI_SIZE: f32 = 8.0;
 pub const PHYISCS_TICK_RATE: f32 = 90.;
 pub const DEBRI_SPAWN_RATE: f32 = 100.0;
 pub const CURSOR_QUAD_SIZE: f32 = 100.0;

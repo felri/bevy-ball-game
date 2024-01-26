@@ -8,6 +8,8 @@ pub struct Position {
 #[derive(Component, Clone)]
 pub struct Velocity {
     pub value: Vec3,
+    pub damping: f32,
+    pub min_speed: f32,
 }
 #[derive(Component)]
 pub struct OrbitCenter {

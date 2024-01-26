@@ -16,7 +16,7 @@ pub fn projectile_movement(
         .par_iter_mut()
         .for_each(|(mut transform, projectile)| {
             let direction = projectile.target - transform.translation;
-            let velocity = direction.normalize() * time.delta_seconds() * 500.0;
+            let velocity = direction.normalize() * time.delta_seconds() * 200.0;
             transform.translation += velocity;
         });
 }
@@ -48,16 +48,26 @@ pub fn spawn_projectile_timer(
     if projectile_spawn_timer.timer.finished() {
         let target_transform = target_query.get_single().unwrap();
         for player_transform in player_query.iter() {
+            let dx = target_transform.translation.x - player_transform.translation.x;
+            let dy = target_transform.translation.y - player_transform.translation.y;
+            let rotation = dy.atan2(dx);
+
             commands.spawn((
                 MaterialMesh2dBundle {
-                    mesh: meshes.add(shape::Cube { size: 1.0 }.into()).into(),
-                    material: materials.add(ColorMaterial::from(Color::WHITE)),
-                    transform: Transform::from_xyz(
-                        player_transform.translation.x,
-                        player_transform.translation.y,
-                        0.0,
-                    ),
-                    ..default()
+                    mesh: meshes
+                        .add(Mesh::from(shape::Quad::new(Vec2::new(12.0, 2.0))))
+                        .into(),
+                    material: materials.add(ColorMaterial::from(Color::RED)),
+                    transform: Transform {
+                        translation: Vec3::new(
+                            player_transform.translation.x,
+                            player_transform.translation.y,
+                            0.0,
+                        ),
+                        rotation: Quat::from_rotation_z(rotation),
+                        ..Default::default()
+                    },
+                    ..Default::default()
                 },
                 Projectile {
                     target: target_transform.translation,

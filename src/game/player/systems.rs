@@ -20,7 +20,7 @@ pub fn orbit_system(
         let distance = (dx * dx + dy * dy).sqrt();
 
         // Update the angle based on the velocity
-        let velocity_magnitude = velocity.value.length();
+        let velocity_magnitude = velocity.value.length() * 0.5;
         let new_angle = f32::atan2(dy, dx) + velocity_magnitude * delta_time;
 
         position.translation = Vec3::new(
@@ -58,7 +58,11 @@ pub fn spawn_player(
             ..default()
         },
         Player,
-        Velocity { value: velocity },
+        Velocity {
+            value: velocity,
+            damping: 2.0,
+            min_speed: 50.0,
+        },
         OrbitCenter {
             x: window.width() / 2.0,
             y: window.height() / 2.0,
@@ -78,7 +82,11 @@ pub fn spawn_player(
             ..default()
         },
         Player,
-        Velocity { value: velocity },
+        Velocity {
+            value: velocity,
+            damping: 2.0,
+            min_speed: 50.0,
+        },
         OrbitCenter {
             x: window.width() / 2.0,
             y: window.height() / 2.0,
