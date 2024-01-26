@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy::render::view::window;
 use bevy::window::PrimaryWindow;
 use rand::Rng;
 
@@ -45,11 +44,16 @@ pub fn spawn_player(
         0.0,
     );
 
-    let position = get_random_position_in_window(window, 220.0);
+    // random position in a circle of the radius of the window
+    let position = Transform::from_xyz(
+        window.width() / 2.0 + (rand::random::<f32>() - 0.5) * window.width(),
+        window.height() / 2.0 + (rand::random::<f32>() - 0.5) * window.height(),
+        0.0,
+    );
 
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(position.x, position.y, 0.0),
+            transform: Transform::from_xyz(position.translation.x, position.translation.y, 0.0),
             texture: asset_server.load("sprites/ball_blue_large.png"),
             ..default()
         },
@@ -61,12 +65,15 @@ pub fn spawn_player(
         },
     ));
 
-    let position = get_random_position_in_window(window, 80.0);
-
+    let position = Transform::from_xyz(
+        window.width() / 2.0 + (rand::random::<f32>() - 0.5) * window.width(),
+        window.height() / 2.0 + (rand::random::<f32>() - 0.5) * window.height(),
+        0.0,
+    );
     // at the top
     commands.spawn((
         SpriteBundle {
-            transform: Transform::from_xyz(position.x, position.y, 0.0),
+            transform: Transform::from_xyz(position.translation.x, position.translation.y, 0.0),
             texture: asset_server.load("sprites/ball_blue_large.png"),
             ..default()
         },
@@ -83,11 +90,4 @@ pub fn despawn_player(mut commands: Commands, player_query: Query<Entity, With<P
     if let Ok(player_entity) = player_query.get_single() {
         commands.entity(player_entity).despawn();
     }
-}
-
-pub fn get_random_position_in_window(window: &Window, radius: f32) -> Vec3 {
-    let mut rng = rand::thread_rng();
-    let x = rng.gen_range(radius..window.width() - radius);
-    let y = rng.gen_range(radius..window.height() - radius);
-    Vec3::new(x, y, 0.0)
 }

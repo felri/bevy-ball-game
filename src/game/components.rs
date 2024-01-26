@@ -5,7 +5,7 @@ pub struct Position {
     pub x: f32,
     pub y: f32,
 }
-#[derive(Component)]
+#[derive(Component, Clone)]
 pub struct Velocity {
     pub value: Vec3,
 }

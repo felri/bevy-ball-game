@@ -5,11 +5,7 @@ use crate::quadtree::{coord::Coord, region::Region, slot_map::SlotId};
 
 #[derive(Component, Clone)]
 
-pub struct Debri {
-    pub velocity: Vec2,
-    pub time_alive: f32,
-    pub start_deceleration: bool,
-}
+pub struct Debri;
 
 #[derive(Event)]
 pub struct SpawnDebri {
