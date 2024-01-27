@@ -50,3 +50,8 @@ pub struct Body {
 
 #[derive(Component)]
 pub struct QuadNodeRect;
+
+#[derive(Event)]
+pub struct CollectedEvent {
+    pub entity: Entity,
+}

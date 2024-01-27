@@ -1,7 +1,7 @@
 use crate::{
     game::{
         components::Velocity,
-        debri::{self, resources::DebriUniverse},
+        debri::{self, components::CollectedEvent, resources::DebriUniverse},
     },
     quadtree::slot_map::SlotId,
 };
@@ -57,6 +57,7 @@ pub fn collector_movement(
     collector_query: Query<&Collider, With<Collector>>,
     universe: Res<DebriUniverse>,
     time: Res<Time>,
+    mut events: EventWriter<CollectedEvent>,
 ) {
     let mut rng = ThreadRng::default();
 
@@ -94,7 +95,7 @@ pub fn collector_movement(
         // -------------------- collision query --------------------
         let query_region = collider
             .into_region(transform.translation)
-            .with_margin((universe.vision * 700.0) as i32);
+            .with_margin((universe.vision * 4000.0) as i32);
         let exclude = match &collider.id {
             Some(id) => {
                 // add collector id to exclude list
@@ -102,7 +103,7 @@ pub fn collector_movement(
                 e.extend(
                     collector_query
                         .iter()
-                        .map(|collider| collider.id.clone().unwrap())
+                        .filter_map(|collider| collider.id.clone())
                         .collect::<Vec<_>>(),
                 );
                 e
@@ -131,7 +132,9 @@ pub fn collector_movement(
         for body in collisions.iter() {
             let distance = transform.translation.distance(body.position);
             if distance < COLLECTOR_SIZE {
-                commands.entity(body.entity).despawn();
+                events.send(CollectedEvent {
+                    entity: body.entity,
+                }); 
 
                 commands.entity(entity).insert(Collector {
                     velocity: collector.velocity,

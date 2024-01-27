@@ -4,7 +4,7 @@ use rand::Rng;
 use std::f32::consts::PI;
 
 use super::{
-    components::{Body, Collected, Collider, Debri, SpawnDebri},
+    components::{Body, Collected, CollectedEvent, Collider, Debri, SpawnDebri},
     DebriUniverse, QuadBench, DEBRI_SIZE,
 };
 
@@ -150,6 +150,21 @@ pub fn render_quadtree(_commands: Commands, universe: ResMut<DebriUniverse>, mut
 pub fn despawn_debri(mut commands: Commands, projectile_query: Query<Entity, With<Debri>>) {
     for entity in projectile_query.iter() {
         commands.entity(entity).despawn();
+    }
+}
+
+pub fn handle_debri_collected_event(
+    mut commands: Commands,
+    mut events: EventReader<CollectedEvent>,
+    mut query: Query<(Entity, &mut Transform, &mut Collider, &mut Velocity), Without<Collector>>,
+) {
+    for event in events.read() {
+        let entity = event.entity;
+        let collider = query.get_mut(entity);
+        if let Ok((_, _, mut collider, _)) = collider {
+            collider.id = None;
+            commands.entity(entity).despawn();
+        }
     }
 }
 

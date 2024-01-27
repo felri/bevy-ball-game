@@ -3,10 +3,11 @@ mod systems;
 
 use self::components::CollectorSpawnEvent;
 
-use super::SimulationState;
+use super::{debri::PHYISCS_TICK_RATE, SimulationState};
 use crate::AppState;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, time::common_conditions::on_timer};
+use instant::Duration;
 use systems::*;
 
 pub const COLLECTOR_SIZE: f32 = 10.0;
@@ -20,8 +21,9 @@ impl Plugin for CollectorPlugin {
             .add_event::<CollectorSpawnEvent>()
             // Systems
             .add_systems(
-                FixedUpdate,
+                Update,
                 (collector_movement, spawn_collector)
+                    .run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE)))
                     .run_if(in_state(AppState::Game))
                     .run_if(in_state(SimulationState::Running)),
             )
