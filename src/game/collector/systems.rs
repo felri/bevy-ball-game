@@ -1,7 +1,7 @@
 use crate::{
     game::{
         components::Velocity,
-        debri::{self, components::CollectedEvent, resources::DebriUniverse},
+        debri::{components::{Collected, CollectedEvent}, resources::DebriUniverse},
     },
     quadtree::slot_map::SlotId,
 };
@@ -9,50 +9,16 @@ use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use rand::prelude::ThreadRng;
 use rand::Rng;
 
-use crate::game::{
-    debri::components::{Collected, Collider, Debri},
-    score::resources::Score,
-};
+use crate::game::{debri::components::Collider, score::resources::Score};
 
 use super::{
     components::{Collector, CollectorSpawnEvent},
     COLLECTOR_SIZE,
 };
 
-// pub fn collector_movement(
-//     mut query: Query<(&mut Transform, &Collector)>,
-//     time: Res<Time>,
-//     treeaccess: Res<NNTree>,
-// ) {
-//     let mut rng = ThreadRng::default(); // Create a new random number generator
-
-//     for (mut transform, collector) in query.iter_mut() {
-//         let collector_pos = Vec2::new(transform.translation.x, transform.translation.y);
-//         let target_pos = if collector.returning {
-//             Vec2::new(
-//                 collector.stash_pos.translation.x,
-//                 collector.stash_pos.translation.y,
-//             )
-//         } else if let Some(nearest) = treeaccess.nearest_neighbour(collector_pos) {
-//             nearest.0
-//         } else {
-//             collector_pos
-//         };
-
-//         let mut towards = (target_pos - collector_pos).normalize();
-
-//         // Add randomness to the movement
-//         towards.x += rng.gen_range(-0.2..0.2);
-//         towards.y += rng.gen_range(-0.2..0.2);
-
-//         transform.translation.x += towards.x * time.delta_seconds() * collector.velocity;
-//         transform.translation.y += towards.y * time.delta_seconds() * collector.velocity;
-//     }
-// }
-
 pub fn collector_movement(
     mut commands: Commands,
-    mut query: Query<(Entity, &mut Transform, &Collector, &Collider)>,
+    mut query: Query<(Entity, &mut Transform, &Collector, &Collider, &mut Velocity), Without<Collected>>,
     mut score: ResMut<Score>,
     collector_query: Query<&Collider, With<Collector>>,
     universe: Res<DebriUniverse>,
@@ -61,7 +27,7 @@ pub fn collector_movement(
 ) {
     let mut rng = ThreadRng::default();
 
-    for (entity, mut transform, collector, collider) in query.iter_mut() {
+    for (entity, mut transform, collector, collider, velocity) in query.iter_mut() {
         // if collected debri and is returning
         if collector.returning {
             let distance = transform
@@ -69,12 +35,14 @@ pub fn collector_movement(
                 .distance(collector.stash_pos.translation);
             // if reached stash
             if distance < COLLECTOR_SIZE {
-                commands.entity(entity).insert(Collector {
-                    velocity: collector.velocity,
-                    stash_pos: collector.stash_pos,
-                    returning: false,
-                    carrying: None,
-                });
+                commands.entity(entity).insert((
+                    Collector {
+                        stash_pos: collector.stash_pos,
+                        returning: false,
+                        carrying: None,
+                    },
+                    velocity.clone(),
+                ));
 
                 score.value += 1;
             } else {
@@ -85,12 +53,17 @@ pub fn collector_movement(
                 towards.x += rng.gen_range(-0.2..0.2);
                 towards.y += rng.gen_range(-0.2..0.2);
 
-                transform.translation.x += towards.x * time.delta_seconds() * collector.velocity;
-                transform.translation.y += towards.y * time.delta_seconds() * collector.velocity;
+                transform.translation.x += towards.x * time.delta_seconds() * velocity.value.x;
+                transform.translation.y += towards.y * time.delta_seconds() * velocity.value.y;
             }
 
             continue;
         }
+
+        let exclude_ids = collector_query
+            .iter()
+            .filter_map(|collider| collider.id.clone())
+            .collect::<Vec<_>>();
 
         // -------------------- collision query --------------------
         let query_region = collider
@@ -100,12 +73,7 @@ pub fn collector_movement(
             Some(id) => {
                 // add collector id to exclude list
                 let mut e = vec![id.clone()];
-                e.extend(
-                    collector_query
-                        .iter()
-                        .filter_map(|collider| collider.id.clone())
-                        .collect::<Vec<_>>(),
-                );
+                e.extend(exclude_ids);
                 e
             }
             None => vec![],
@@ -124,8 +92,8 @@ pub fn collector_movement(
             towards.x += rng.gen_range(-0.2..0.2);
             towards.y += rng.gen_range(-0.2..0.2);
 
-            transform.translation.x += towards.x * time.delta_seconds() * collector.velocity;
-            transform.translation.y += towards.y * time.delta_seconds() * collector.velocity;
+            transform.translation.x += towards.x * time.delta_seconds() * velocity.value.x;
+            transform.translation.y += towards.y * time.delta_seconds() * velocity.value.y;
         }
 
         // collision with debri
@@ -134,14 +102,16 @@ pub fn collector_movement(
             if distance < COLLECTOR_SIZE {
                 events.send(CollectedEvent {
                     entity: body.entity,
-                }); 
-
-                commands.entity(entity).insert(Collector {
-                    velocity: collector.velocity,
-                    stash_pos: collector.stash_pos,
-                    returning: true,
-                    carrying: Some(1.0),
                 });
+
+                commands.entity(entity).insert((
+                    Collector {
+                        stash_pos: collector.stash_pos,
+                        returning: true,
+                        carrying: Some(1.0),
+                    },
+                    velocity.clone(),
+                ));
             }
         }
     }
@@ -172,65 +142,16 @@ pub fn spawn_collector(
                 ..Default::default()
             },
             Collector {
-                velocity: 100.0,
                 stash_pos: event.spawn_pos,
                 returning: false,
                 carrying: None,
             },
             Collider::new(COLLECTOR_SIZE),
             Velocity {
-                value: Vec3::new(0.0, 0.0, 0.0),
+                value: Vec3::new(200.0, 200.0, 0.0),
                 damping: 0.0,
                 min_speed: 0.0,
             },
         ));
     }
 }
-
-// pub fn check_colision_collector(
-//     mut commands: Commands,
-//     query: Query<(Entity, &Transform, &Collector)>,
-//     query_debri: Query<(Entity, &Transform, &Collider)>,
-//     mut score: ResMut<Score>,
-// ) {
-//     for (entity, transform, collector) in query.iter() {
-//         if collector.returning {
-//             let distance = transform
-//                 .translation
-//                 .distance(collector.stash_pos.translation);
-//             if distance < COLLECTOR_SIZE {
-//                 commands.entity(entity).insert(Collector {
-//                     velocity: collector.velocity,
-//                     stash_pos: collector.stash_pos,
-//                     returning: false,
-//                     carrying: None,
-//                 });
-
-//                 score.value += 1;
-//             }
-//         } else {
-//             // -------------------- collision query --------------------
-//             let query_region = collider
-//                 .into_region(transform.translation);
-//             let exclude = match &collider.id {
-//                 Some(id) => vec![id.clone()],
-//                 None => vec![],
-//             };
-
-//         } else {
-//             for (entity_debri, transform_debri) in query_debri.iter() {
-//                 let distance = transform.translation.distance(transform_debri.translation);
-//                 if distance < COLLECTOR_SIZE {
-//                     commands.entity(entity_debri).insert(Collected);
-
-//                     commands.entity(entity).insert(Collector {
-//                         velocity: collector.velocity,
-//                         stash_pos: collector.stash_pos,
-//                         returning: true,
-//                         carrying: Some(1.0),
-//                     });
-//                 }
-//             }
-//         }
-//     }
-// }

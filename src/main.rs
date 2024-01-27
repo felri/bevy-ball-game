@@ -1,8 +1,8 @@
 pub mod events;
 mod game;
 mod main_menu;
-mod systems;
 mod quadtree;
+mod systems;
 
 use bevy_pancam::PanCamPlugin;
 use game::GamePlugin;
@@ -15,7 +15,10 @@ use bevy::prelude::*;
 fn main() {
     App::new()
         // Bevy Plugins
-        .add_plugins((DefaultPlugins, PanCamPlugin::default()))
+        .add_plugins((
+            DefaultPlugins.set(ImagePlugin::default_nearest()),
+            PanCamPlugin::default(),
+        ))
         .add_state::<AppState>()
         // My Plugins
         .add_plugins(MainMenuPlugin)

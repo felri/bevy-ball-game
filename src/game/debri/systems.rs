@@ -16,7 +16,7 @@ pub fn build_or_update_quadtree(
     query
         .iter_mut()
         .for_each(|(entity, transform, mut collider, velocity)| {
-            collider.id = Some(universe.graph.insert(
+            let id = Some(universe.graph.insert(
                 collider.into_region(transform.translation),
                 Body {
                     entity,
@@ -24,6 +24,7 @@ pub fn build_or_update_quadtree(
                     velocity: velocity.value,
                 },
             ));
+            collider.id = id;
         });
 }
 
@@ -157,12 +158,14 @@ pub fn handle_debri_collected_event(
     mut commands: Commands,
     mut events: EventReader<CollectedEvent>,
     mut query: Query<(Entity, &mut Transform, &mut Collider, &mut Velocity), Without<Collector>>,
+    mut universe: ResMut<DebriUniverse>,
 ) {
     for event in events.read() {
         let entity = event.entity;
         let collider = query.get_mut(entity);
-        if let Ok((_, _, mut collider, _)) = collider {
-            collider.id = None;
+        if let Ok((_, _, collider, _)) = collider {
+            let slot_id = collider.id.as_ref().unwrap();
+            universe.graph.remove(&slot_id);
             commands.entity(entity).despawn();
         }
     }

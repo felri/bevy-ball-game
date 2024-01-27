@@ -73,14 +73,16 @@ impl QuadNode {
         match &mut self.node_type {
             NodeType::Leaf => self.values.retain(|id| id != value),
             NodeType::Parent(children) => {
-                children
-                    .iter_mut()
-                    .filter(|child| child.region.intersects(region_store.get(value).unwrap()))
-                    .for_each(|child| child.remove(value, region_store));
-                if self.value_count_rec() < MAX_CELL_SIZE {
-                    let values = self.drain_values_rec();
-                    self.node_type = NodeType::Leaf;
-                    self.values.extend(values);
+                if let Some(region) = region_store.get(value) {
+                    children
+                        .iter_mut()
+                        .filter(|child| child.region.intersects(region))
+                        .for_each(|child| child.remove(value, region_store));
+                    if self.value_count_rec() < MAX_CELL_SIZE {
+                        let values = self.drain_values_rec();
+                        self.node_type = NodeType::Leaf;
+                        self.values.extend(values);
+                    }
                 }
             }
         }

@@ -41,11 +41,19 @@ impl<T> QuadTree<T> {
             .drain(..)
             .collect();
 
-        set.iter().map(|id| self.value_store.get(id).unwrap()).collect()
+        set.iter()
+            .map(|id| self.value_store.get(id).unwrap())
+            .collect()
     }
 
     pub fn size(&self) -> &Region {
         self.root.size()
+    }
+
+    pub fn remove(&mut self, id: &SlotId) {
+        self.root.remove(id, &self.region_store);
+        self.region_store.remove(id.clone());
+        self.value_store.remove(id.clone());
     }
 
     pub fn get_regions(&self) -> Vec<&Region> {
