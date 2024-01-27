@@ -70,7 +70,7 @@ pub fn build_hud(commands: &mut Commands, asset_server: &Res<AssetServer>) -> En
                             },
                             ..default()
                         },
-                        EnemyText {},
+                        DebriCountText {},
                     ));
                     // Enemy Image
                     parent.spawn(ImageBundle {

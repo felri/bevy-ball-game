@@ -5,11 +5,11 @@ use std::f32::consts::PI;
 
 use super::{
     components::{Body, Collected, CollectedEvent, Collider, Debri, SpawnDebri},
-    DebriUniverse, QuadBench, DEBRI_SIZE,
+    DebriUniverse, DEBRI_SIZE,
 };
 
 pub fn build_or_update_quadtree(
-    mut query: Query<(Entity, &Transform, &mut Collider, &Velocity)>,
+    mut query: Query<(Entity, &Transform, &mut Collider, &Velocity), Without<Collector>>,
     mut universe: ResMut<DebriUniverse>,
 ) {
     universe.graph.clear();
@@ -169,6 +169,10 @@ pub fn handle_debri_collected_event(
             commands.entity(entity).despawn();
         }
     }
+}
+
+pub fn count_debri(query: Query<&Debri, Without<Collected>>, mut universe: ResMut<DebriUniverse>) {
+    universe.debri_count = query.iter().count() as u32;
 }
 
 pub fn spawn_debri(

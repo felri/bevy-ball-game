@@ -21,7 +21,7 @@ impl Plugin for CollectorPlugin {
             .add_event::<CollectorSpawnEvent>()
             // Systems
             .add_systems(
-                Update,
+                FixedUpdate,
                 (collector_movement, spawn_collector)
                     .run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE)))
                     .run_if(in_state(AppState::Game))

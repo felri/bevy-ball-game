@@ -6,11 +6,13 @@ mod projectile;
 pub mod score;
 pub mod star;
 pub mod collector;
+pub mod building;
 mod systems;
 mod target;
 mod ui;
 
 use enemy::EnemyPlugin;
+use building::BuildingPlugin;
 use player::PlayerPlugin;
 use projectile::ProjectilePlugin;
 use score::ScorePlugin;

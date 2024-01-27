@@ -29,18 +29,14 @@ impl Plugin for DebriPlugin {
             .add_systems(Startup, insert_debri_universe)
             .add_systems(
                 FixedUpdate,
-                (spawn_debri, handle_debri_collected_event)
+                (spawn_debri, handle_debri_collected_event, count_debri)
                     .run_if(in_state(AppState::Game))
                     .run_if(in_state(SimulationState::Running)),
             )
             .add_systems(
                 Update,
-                (
-                    build_or_update_quadtree
-                        .run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE))),
-                    update_debri.run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE))),
-                    move_system.run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE))),
-                )
+                (build_or_update_quadtree, update_debri, move_system)
+                    .run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE)))
                     .run_if(in_state(AppState::Game))
                     .run_if(in_state(SimulationState::Running)),
             )

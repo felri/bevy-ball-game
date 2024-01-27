@@ -12,7 +12,7 @@ pub struct DebriUniverse {
     pub vision: f32,
     pub speed: f32,
     pub show_graph: bool,
-    pub boid_count : u32,
+    pub debri_count : u32,
     pub mouse_used_by_egui : bool,
 }
 
@@ -33,7 +33,7 @@ impl DebriUniverse {
             speed: 1.0,
             vision : 1.0,
             alignment: 0.1,
-            boid_count : 0,
+            debri_count : 0,
             show_graph: true,
             mouse_used_by_egui : false,
         }

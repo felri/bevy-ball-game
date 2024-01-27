@@ -4,7 +4,7 @@ mod systems;
 
 use systems::layout::*;
 
-use crate::game::ui::hud::systems::updates::{update_enemy_text, update_score_text};
+use crate::game::ui::hud::systems::updates::{update_debri_count, update_score_text};
 use crate::AppState;
 use bevy::prelude::*;
 
@@ -18,7 +18,7 @@ impl Plugin for HudPlugin {
             // Systems
             .add_systems(
                 Update,
-                (update_score_text, update_enemy_text).run_if(in_state(AppState::Game)),
+                (update_score_text, update_debri_count).run_if(in_state(AppState::Game)),
             )
             // OnExit Systems
             .add_systems(OnExit(AppState::Game), despawn_hud);
