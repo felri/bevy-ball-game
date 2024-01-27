@@ -1,4 +1,4 @@
-use crate::game::components::Velocity;
+use crate::game::{collector::components::Collector, components::Velocity};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use rand::Rng;
 use std::f32::consts::PI;
@@ -9,11 +9,9 @@ use super::{
 };
 
 pub fn build_or_update_quadtree(
-    mut query: Query<(Entity, &Transform, &mut Collider, &Velocity), With<Debri>>,
+    mut query: Query<(Entity, &Transform, &mut Collider, &Velocity)>,
     mut universe: ResMut<DebriUniverse>,
-    mut bench: ResMut<QuadBench>,
 ) {
-    let now = instant::Instant::now();
     universe.graph.clear();
     query
         .iter_mut()
@@ -27,22 +25,20 @@ pub fn build_or_update_quadtree(
                 },
             ));
         });
-    bench.avarage_build_time = now.elapsed().as_micros();
 }
 
 pub fn update_debri(
-    mut query: Query<(Entity, &Transform, &mut Collider, &mut Velocity)>,
+    mut query: Query<(Entity, &Transform, &mut Collider, &mut Velocity), Without<Collector>>,
     universe: Res<DebriUniverse>,
     time: Res<Time>,
 ) {
-    let mut query_time: u128 = 0;
     query
         .iter_mut()
         .for_each(|(_entity, transform, mut collider, mut velocity)| {
+            // if collected
             let x = transform.translation.x as i32;
             let y = transform.translation.y as i32;
             let win = universe.graph.size();
-            let now = instant::Instant::now();
 
             // -------------------- collision query --------------------
             let query_region = collider
@@ -55,8 +51,6 @@ pub fn update_debri(
 
             let collisions = universe.graph.query(&query_region, &exclude);
             collider.nearby = collisions.len();
-
-            query_time += now.elapsed().as_nanos();
 
             let (mass_center, aligment, separtion) = collisions.iter().fold(
                 (Vec3::ZERO, Vec3::ZERO, Vec3::ZERO),
@@ -103,6 +97,12 @@ pub fn update_debri(
                 new_velocity.y *= -1.0;
             }
 
+            // -------------------- Random --------------------
+            if rand::thread_rng().gen_range(0..100) < 1 {
+                new_velocity.x += rand::thread_rng().gen_range(-10.0..10.0);
+                new_velocity.y += rand::thread_rng().gen_range(-10.0..10.0);
+            }
+
             // -------------------- Damping --------------------
             let delta_time = universe.speed * time.delta_seconds();
             let mut damping = velocity.damping * delta_time;
@@ -117,7 +117,7 @@ pub fn update_debri(
 }
 
 pub fn move_system(
-    mut query: Query<(&mut Transform, &Velocity)>,
+    mut query: Query<(&mut Transform, &Velocity), Without<Collector>>,
     universe: Res<DebriUniverse>,
     time: Res<Time>,
 ) {

@@ -1,11 +1,11 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use rand::Rng;
 
 use super::components::Player;
 
 use crate::game::components::OrbitCenter;
 use crate::game::components::Velocity;
+use crate::game::debri::components::Collider;
 
 pub fn orbit_system(
     time: Res<Time>,

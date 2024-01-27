@@ -4,7 +4,7 @@ mod systems;
 
 use init::*;
 use std::time::Duration;
-mod resources;
+pub mod resources;
 
 use resources::*;
 use systems::*;
@@ -41,7 +41,7 @@ impl Plugin for DebriPlugin {
                         .run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE))),
                     update_debri.run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE))),
                     move_system.run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE))),
-                    render_quadtree,
+                    // render_quadtree,
                 )
                     .run_if(in_state(AppState::Game))
                     .run_if(in_state(SimulationState::Running)),
