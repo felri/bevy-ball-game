@@ -39,7 +39,7 @@ pub fn interact_with_button(
                     DefaultButton::Building(building_type) => match building_type {
                         BuldingType::Collector => {
                             events_spawn_building.send(EventSpawnBuilding {
-                                position: Transform::from_xyz(100.0, 100.0, 0.0),
+                                position: Transform::from_xyz(100.0, 100.0, 1.0),
                             });
                         }
                         BuldingType::Shooter => {

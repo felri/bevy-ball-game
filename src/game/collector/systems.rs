@@ -28,9 +28,12 @@ pub fn collector_movement(
     mut events: EventWriter<CollectedEvent>,
 ) {
     let mut rng = ThreadRng::default();
+    let exclude_ids = collector_query
+        .iter()
+        .filter_map(|collider| collider.id.clone())
+        .collect::<Vec<_>>();
 
     for (mut transform, mut collector, collider, velocity) in query.iter_mut() {
-        // if collected debri and is returning
         if collector.returning {
             let distance = transform
                 .translation
@@ -42,9 +45,12 @@ pub fn collector_movement(
 
                 score.value += 1;
             } else {
-                let mut towards =
-                    (collector.stash_pos.translation - transform.translation).normalize();
-
+                let direction = collector.stash_pos.translation - transform.translation;
+                let mut towards = if direction.length() > 0.0 {
+                    direction.normalize()
+                } else {
+                    Vec3::ZERO
+                };
                 // Add randomness to the movement
                 towards.x += rng.gen_range(-0.2..0.2);
                 towards.y += rng.gen_range(-0.2..0.2);
@@ -53,24 +59,11 @@ pub fn collector_movement(
                 transform.translation.y += towards.y * time.delta_seconds() * velocity.value.y;
             }
         } else {
-            let exclude_ids = collector_query
-                .iter()
-                .filter_map(|collider| collider.id.clone())
-                .collect::<Vec<_>>();
-
             // -------------------- collision query --------------------
             let query_region = collider
                 .into_region(transform.translation)
                 .with_margin((universe.vision * 4000.0) as i32);
-            let exclude = match &collider.id {
-                Some(id) => {
-                    // add collector id to exclude list
-                    let mut e = vec![id.clone()];
-                    e.extend(exclude_ids);
-                    e
-                }
-                None => vec![],
-            };
+            let exclude = exclude_ids.clone();
             let collisions = universe.graph.query(&query_region, &exclude);
 
             // move towards any debri in range
@@ -78,8 +71,12 @@ pub fn collector_movement(
                 .iter()
                 .min_by_key(|body| (transform.translation - body.position).length_squared() as i32)
             {
-                let mut towards = (nearest.position - transform.translation).normalize();
-
+                let direction = nearest.position - transform.translation;
+                let mut towards = if direction.length() > 0.0 {
+                    direction.normalize()
+                } else {
+                    Vec3::ZERO
+                };
                 // Add randomness to the movement
                 towards.x += rng.gen_range(-0.2..0.2);
                 towards.y += rng.gen_range(-0.2..0.2);

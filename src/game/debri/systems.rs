@@ -187,8 +187,8 @@ pub fn spawn_debri(
         let initial_speed = 200.0;
         // Negate and normalize the direction for debris velocity
         let velocity = Vec3::new(
-            -direction.x * initial_speed,
-            -direction.y * initial_speed,
+            -direction.x * initial_speed * 1.2,
+            -direction.y * initial_speed * 1.2,
             0.0,
         );
 
