@@ -42,29 +42,6 @@ pub fn build_spawn_toolbar(commands: &mut Commands, asset_server: &Res<AssetServ
                                 background_color: NORMAL_BUTTON.into(),
                                 ..default()
                             },
-                            DefaultButton::Shooter,
-                        ))
-                        .with_children(|parent| {
-                            parent.spawn(TextBundle {
-                                style: Style { ..default() },
-                                text: Text {
-                                    sections: vec![TextSection::new(
-                                        "Shooter",
-                                        get_button_text_style(&asset_server),
-                                    )],
-                                    alignment: TextAlignment::Center,
-                                    ..default()
-                                },
-                                ..default()
-                            });
-                        });
-                    parent
-                        .spawn((
-                            ButtonBundle {
-                                style: BUTTON_STYLE,
-                                background_color: NORMAL_BUTTON.into(),
-                                ..default()
-                            },
                             DefaultButton::Collector,
                         ))
                         .with_children(|parent| {
@@ -97,6 +74,60 @@ pub fn build_spawn_toolbar(commands: &mut Commands, asset_server: &Res<AssetServ
                                 text: Text {
                                     sections: vec![TextSection::new(
                                         "Stash",
+                                        get_button_text_style(&asset_server),
+                                    )],
+                                    alignment: TextAlignment::Center,
+                                    ..default()
+                                },
+                                ..default()
+                            });
+                        });
+                });
+
+            parent
+                .spawn(NodeBundle {
+                    style: SPAWN_TOOLBAR_CONTAINER_STYLE,
+                    ..default()
+                })
+                .with_children(|parent| {
+                    parent
+                        .spawn((
+                            ButtonBundle {
+                                style: BUTTON_STYLE,
+                                background_color: NORMAL_BUTTON.into(),
+                                ..default()
+                            },
+                            DefaultButton::Shooter,
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn(TextBundle {
+                                style: Style { ..default() },
+                                text: Text {
+                                    sections: vec![TextSection::new(
+                                        "Base",
+                                        get_button_text_style(&asset_server),
+                                    )],
+                                    alignment: TextAlignment::Center,
+                                    ..default()
+                                },
+                                ..default()
+                            });
+                        });
+                    parent
+                        .spawn((
+                            ButtonBundle {
+                                style: BUTTON_STYLE,
+                                background_color: NORMAL_BUTTON.into(),
+                                ..default()
+                            },
+                            DefaultButton::Shooter,
+                        ))
+                        .with_children(|parent| {
+                            parent.spawn(TextBundle {
+                                style: Style { ..default() },
+                                text: Text {
+                                    sections: vec![TextSection::new(
+                                        "Shooter",
                                         get_button_text_style(&asset_server),
                                     )],
                                     alignment: TextAlignment::Center,

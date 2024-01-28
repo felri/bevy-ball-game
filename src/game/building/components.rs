@@ -4,6 +4,11 @@ use bevy::prelude::*;
 pub struct Building;
 
 #[derive(Event)]
-pub struct EvenetSpawnBuilding {
-    pub position: Vec3,
+pub struct EventSpawnBuilding {
+    pub position: Transform,
+}
+
+pub enum BuldingType {
+    Stash,
+    Shooter,
 }

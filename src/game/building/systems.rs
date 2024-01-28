@@ -1,7 +1,7 @@
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 
 use super::{
-    components::{Building, EvenetSpawnBuilding},
+    components::{Building, EventSpawnBuilding},
     BUILDING_SIZE,
 };
 
@@ -15,7 +15,7 @@ pub fn spawn_building(
     mut commands: Commands,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut events: EventReader<EvenetSpawnBuilding>,
+    mut events: EventReader<EventSpawnBuilding>,
 ) {
     for event in events.read() {
         let position = event.position.clone();
@@ -29,8 +29,8 @@ pub fn spawn_building(
                         .into(),
                     )
                     .into(),
-                material: materials.add(ColorMaterial::from(Color::BLUE)),
-                transform: Transform::from_xyz(position.x, position.y, position.z),
+                material: materials.add(ColorMaterial::from(Color::WHITE)),
+                transform: position,
                 ..Default::default()
             },
             Building,

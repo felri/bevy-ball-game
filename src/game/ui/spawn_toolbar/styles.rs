@@ -9,6 +9,7 @@ pub const SPAWN_TOOLBAR_STYLE: Style = {
     style.position_type = PositionType::Absolute; // Needed to display separately from HUD.
     style.display = Display::Flex; // Hidden by Default
     style.justify_content = JustifyContent::Center;
+    style.flex_direction = FlexDirection::Column;
     style.align_items = AlignItems::FlexEnd;
     style.height = Val::Percent(100.0);
     style.width = Val::Percent(100.0);
@@ -19,10 +20,9 @@ pub const SPAWN_TOOLBAR_STYLE: Style = {
 pub const SPAWN_TOOLBAR_CONTAINER_STYLE: Style = {
     let mut style = Style::DEFAULT;
     style.display = Display::Flex;
-    style.flex_direction = FlexDirection::Row;
-    style.justify_content = JustifyContent::Center;
-    style.align_items = AlignItems::Center;
-    style.height = Val::Percent(10.00);
+    style.flex_direction = FlexDirection::Column;
+    style.justify_content = JustifyContent::FlexEnd;
+    style.align_items = AlignItems::FlexEnd;
     style.width = Val::Percent(100.0);
 
     style
@@ -34,6 +34,7 @@ pub const BUTTON_STYLE: Style = {
     style.align_items = AlignItems::Center;
     style.height = Val::Px(80.0);
     style.width = Val::Px(200.0);
+    style.margin = UiRect::new(Val::Px(0.0), Val::Px(0.0), Val::Px(0.0), Val::Px(20.0));
 
     style
 };

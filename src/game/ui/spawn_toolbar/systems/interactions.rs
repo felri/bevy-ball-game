@@ -1,6 +1,7 @@
 use bevy::app::AppExit;
 use bevy::prelude::*;
 
+use crate::game::building::components::EventSpawnBuilding;
 use crate::game::collector::components::CollectorSpawnEvent;
 use crate::game::ui::spawn_toolbar::components::*;
 use crate::game::ui::spawn_toolbar::styles::HOVERED_BUTTON;
@@ -13,7 +14,7 @@ use crate::AppState;
 pub fn interact_with_button(
     mut events_spawn_collector: EventWriter<CollectorSpawnEvent>,
     // mut events_spawn_shooter: EventWriter<SpawnShooter>,
-    // mut events_spawn_building: EventWriter<SpawnBuilding>,
+    mut events_spawn_building: EventWriter<EventSpawnBuilding>,
     mut button_query: Query<
         (&Interaction, &mut BackgroundColor, &DefaultButton),
         (Changed<Interaction>, With<DefaultButton>),
@@ -37,7 +38,9 @@ pub fn interact_with_button(
                     }
                     DefaultButton::Building(building_type) => match building_type {
                         BuldingType::Collector => {
-                            println!("Collector");
+                            events_spawn_building.send(EventSpawnBuilding {
+                                position: Transform::from_xyz(100.0, 100.0, 0.0),
+                            });
                         }
                         BuldingType::Shooter => {
                             println!("Shooter");
