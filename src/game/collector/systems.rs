@@ -63,8 +63,7 @@ pub fn collector_movement(
             let query_region = collider
                 .into_region(transform.translation)
                 .with_margin((universe.vision * 4000.0) as i32);
-            let exclude = exclude_ids.clone();
-            let collisions = universe.graph.query(&query_region, &exclude);
+            let collisions = universe.graph.query(&query_region, &exclude_ids);
 
             // move towards any debri in range
             if let Some(nearest) = collisions

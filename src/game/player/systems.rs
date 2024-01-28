@@ -69,29 +69,29 @@ pub fn spawn_player(
         },
     ));
 
-    let position = Transform::from_xyz(
-        window.width() / 2.0 + (rand::random::<f32>() - 0.5) * window.width(),
-        window.height() / 2.0 + (rand::random::<f32>() - 0.5) * window.height(),
-        0.0,
-    );
+    // let position = Transform::from_xyz(
+    //     window.width() / 2.0 + (rand::random::<f32>() - 0.5) * window.width(),
+    //     window.height() / 2.0 + (rand::random::<f32>() - 0.5) * window.height(),
+    //     0.0,
+    // );
     // at the top
-    commands.spawn((
-        SpriteBundle {
-            transform: Transform::from_xyz(position.translation.x, position.translation.y, 0.0),
-            texture: asset_server.load("sprites/ball_blue_large.png"),
-            ..default()
-        },
-        Player,
-        Velocity {
-            value: velocity,
-            damping: 2.0,
-            min_speed: 50.0,
-        },
-        OrbitCenter {
-            x: window.width() / 2.0,
-            y: window.height() / 2.0,
-        },
-    ));
+    // commands.spawn((
+    //     SpriteBundle {
+    //         transform: Transform::from_xyz(position.translation.x, position.translation.y, 0.0),
+    //         texture: asset_server.load("sprites/ball_blue_large.png"),
+    //         ..default()
+    //     },
+    //     Player,
+    //     Velocity {
+    //         value: velocity,
+    //         damping: 2.0,
+    //         min_speed: 50.0,
+    //     },
+    //     OrbitCenter {
+    //         x: window.width() / 2.0,
+    //         y: window.height() / 2.0,
+    //     },
+    // ));
 }
 
 pub fn despawn_player(mut commands: Commands, player_query: Query<Entity, With<Player>>) {

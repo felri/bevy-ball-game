@@ -1,45 +1,33 @@
 pub mod components;
-mod resources;
 mod systems;
 
-use resources::*;
-use systems::*;
+use self::components::EnemySpawnEvent;
 
+use super::{debri::PHYISCS_TICK_RATE, SimulationState};
 use crate::AppState;
 
-use bevy::prelude::*;
+use bevy::{prelude::*, time::common_conditions::on_timer};
+use instant::Duration;
+use systems::*;
 
-use super::SimulationState;
-
-pub const ENEMY_SIZE: f32 = 64.0; // The enemy sprite is 64x64 pixels.
-pub const ENEMY_SPEED: f32 = 200.0;
-pub const NUMBER_OF_ENEMIES: usize = 4;
+pub const ENEMY_SIZE: f32 = 10.0;
 
 pub struct EnemyPlugin;
 
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app
-            // Resources
-            .init_resource::<EnemySpawnTimer>()
-            // Startup Systems
-            // .add_startup_system(spawn_enemies)
-            // Enter State Systems
-            .add_systems(OnEnter(AppState::Game), spawn_enemies)
+            // Events
+            .add_event::<EnemySpawnEvent>()
             // Systems
             .add_systems(
-                Update,
-                (
-                    enemy_movement,
-                    update_enemy_direction,
-                    confine_enemy_movement,
-                    tick_enemy_spawn_timer,
-                    spawn_enemies_over_time,
-                )
+                FixedUpdate,
+                (enemy_movement, spawn_enemy)
+                    .run_if(on_timer(Duration::from_secs_f32(1. / PHYISCS_TICK_RATE)))
                     .run_if(in_state(AppState::Game))
                     .run_if(in_state(SimulationState::Running)),
             )
-            // Exit State Systems
-            .add_systems(OnExit(AppState::Game), despawn_enemies);
+            // On Exit State
+            .add_systems(OnExit(AppState::Game), despawn_enemy);
     }
 }

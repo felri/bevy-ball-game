@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 
 #[derive(Component)]
-pub struct Enemy {
-    pub direction: Vec2,
+
+pub struct Enemy;
+
+#[derive(Event)]
+pub struct EnemySpawnEvent {
+    pub spawn_pos: Transform,
 }

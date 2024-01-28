@@ -1,148 +1,111 @@
-use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-use rand::prelude::*;
+use crate::game::{
+    components::Velocity,
+    debri::{
+        components::{Collected, CollectedEvent},
+        resources::DebriUniverse,
+    },
+};
+use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
+use rand::prelude::ThreadRng;
+use rand::Rng;
 
-// use crate::enemy::components::*;
-use super::components::*;
-use super::resources::*;
-use super::{ENEMY_SIZE, ENEMY_SPEED, NUMBER_OF_ENEMIES};
+use crate::game::{debri::components::Collider, score::resources::Score};
 
-pub fn spawn_enemies(
-    mut commands: Commands,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    asset_server: Res<AssetServer>,
+use super::{
+    components::{Enemy, EnemySpawnEvent},
+    ENEMY_SIZE,
+};
+
+pub fn enemy_movement(
+    mut query: Query<(&mut Transform, &mut Enemy, &Collider, &mut Velocity), Without<Collected>>,
+    mut score: ResMut<Score>,
+    enemy_query: Query<&Collider, With<Enemy>>,
+    universe: Res<DebriUniverse>,
+    time: Res<Time>,
+    mut events: EventWriter<CollectedEvent>,
 ) {
-    let window = window_query.get_single().unwrap();
+    let mut rng = ThreadRng::default();
+    let exclude_ids = enemy_query
+        .iter()
+        .filter_map(|collider| collider.id.clone())
+        .collect::<Vec<_>>();
 
-    for _ in 0..NUMBER_OF_ENEMIES {
-        let random_x = random::<f32>() * window.width();
-        let random_y = random::<f32>() * window.height();
+    for (mut transform, mut enemy, collider, velocity) in query.iter_mut() {
+        // -------------------- collision query --------------------
+        let query_region = collider
+            .into_region(transform.translation)
+            .with_margin((universe.vision * 4000.0) as i32);
+        let collisions = universe.graph.query(&query_region, &exclude_ids);
 
+        // move towards any debri in range
+        if let Some(nearest) = collisions
+            .iter()
+            .min_by_key(|body| (transform.translation - body.position).length_squared() as i32)
+        {
+            let direction = nearest.position - transform.translation;
+            let mut towards = if direction.length() > 0.0 {
+                direction.normalize()
+            } else {
+                Vec3::ZERO
+            };
+            // Add randomness to the movement
+            towards.x += rng.gen_range(-0.2..0.2);
+            towards.y += rng.gen_range(-0.2..0.2);
+
+            transform.translation.x += towards.x * time.delta_seconds() * velocity.value.x;
+            transform.translation.y += towards.y * time.delta_seconds() * velocity.value.y;
+
+            // collision with debri
+            let distance = transform.translation.distance(nearest.position);
+            if distance < ENEMY_SIZE {
+                events.send(CollectedEvent {
+                    entity: nearest.entity,
+                });
+
+                enemy.returning = true;
+                enemy.carrying = Some(1.0);
+            } else {
+                enemy.returning = false;
+                enemy.carrying = None;
+            }
+        }
+    }
+}
+
+pub fn despawn_enemy(mut commands: Commands, query: Query<Entity, With<Enemy>>) {
+    for entity in query.iter() {
+        commands.entity(entity).despawn();
+    }
+}
+
+pub fn spawn_enemy(
+    mut events: EventReader<EnemySpawnEvent>,
+    mut commands: Commands,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+) {
+    for event in events.read() {
         commands.spawn((
-            SpriteBundle {
-                transform: Transform::from_xyz(random_x, random_y, 0.0),
-                texture: asset_server.load("sprites/ball_red_large.png"),
-                ..default()
+            MaterialMesh2dBundle {
+                mesh: meshes.add(shape::Circle::new(ENEMY_SIZE).into()).into(),
+                material: materials.add(ColorMaterial::from(Color::RED)),
+                transform: Transform::from_xyz(
+                    event.spawn_pos.translation.x,
+                    event.spawn_pos.translation.y,
+                    0.0,
+                ),
+                ..Default::default()
             },
             Enemy {
-                direction: Vec2::new(random::<f32>(), random::<f32>()).normalize(),
+                stash_pos: event.spawn_pos,
+                returning: false,
+                carrying: None,
             },
-        ));
-    }
-}
-
-pub fn despawn_enemies(mut commands: Commands, enemy_query: Query<Entity, With<Enemy>>) {
-    for enemy_entity in enemy_query.iter() {
-        commands.entity(enemy_entity).despawn();
-    }
-}
-
-pub fn enemy_movement(mut enemy_query: Query<(&mut Transform, &Enemy)>, time: Res<Time>) {
-    for (mut transform, enemy) in enemy_query.iter_mut() {
-        let direction = Vec3::new(enemy.direction.x, enemy.direction.y, 0.0);
-        transform.translation += direction * ENEMY_SPEED * time.delta_seconds();
-    }
-}
-
-pub fn update_enemy_direction(
-    mut enemy_query: Query<(&Transform, &mut Enemy)>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    // audio: Res<Audio>,
-    // asset_server: Res<AssetServer>,
-) {
-    let window = window_query.get_single().unwrap();
-
-    let half_enemy_size = ENEMY_SIZE / 2.0; // 32.0
-    let x_min = 0.0 + half_enemy_size;
-    let x_max = window.width() - half_enemy_size;
-    let y_min = 0.0 + half_enemy_size;
-    let y_max = window.height() - half_enemy_size;
-
-    for (transform, mut enemy) in enemy_query.iter_mut() {
-        // let mut direction_changed = false;
-
-        let translation = transform.translation;
-        if translation.x <= x_min || translation.x >= x_max {
-            enemy.direction.x *= -1.0;
-            // direction_changed = true;
-        }
-        if translation.y <= y_min || translation.y >= y_max {
-            enemy.direction.y *= -1.0;
-            // direction_changed = true;
-        }
-
-        // Play SFX
-        // if direction_changed {
-        //     // Play Sound Effect
-        //     let sound_effect_1 = asset_server.load("audio/pluck_001.ogg");
-        //     let sound_effect_2 = asset_server.load("audio/pluck_002.ogg");
-        //     // Randomly play one of the two sound effects.
-        //     let sound_effect = if random::<f32>() > 0.5 {
-        //         sound_effect_1
-        //     } else {
-        //         sound_effect_2
-        //     };
-        //     audio.play(sound_effect);
-        // }
-    }
-}
-
-pub fn confine_enemy_movement(
-    mut enemy_query: Query<&mut Transform, With<Enemy>>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-) {
-    let window = window_query.get_single().unwrap();
-
-    let half_enemy_size = ENEMY_SIZE / 2.0;
-    let x_min = 0.0 + half_enemy_size;
-    let x_max = window.width() - half_enemy_size;
-    let y_min = 0.0 + half_enemy_size;
-    let y_max = window.height() - half_enemy_size;
-
-    for mut transform in enemy_query.iter_mut() {
-        let mut translation = transform.translation;
-
-        // Bound the enemy x position
-        if translation.x < x_min {
-            translation.x = x_min;
-        } else if translation.x > x_max {
-            translation.x = x_max;
-        }
-        // Bound the enemy y position
-        if translation.y < y_min {
-            translation.y = y_min;
-        } else if translation.y > y_max {
-            translation.y = y_max;
-        }
-
-        transform.translation = translation;
-    }
-}
-
-pub fn tick_enemy_spawn_timer(mut enemy_spawn_timer: ResMut<EnemySpawnTimer>, time: Res<Time>) {
-    enemy_spawn_timer.timer.tick(time.delta());
-}
-
-pub fn spawn_enemies_over_time(
-    mut commands: Commands,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    asset_server: Res<AssetServer>,
-    enemy_spawn_timer: Res<EnemySpawnTimer>,
-) {
-    if enemy_spawn_timer.timer.finished() {
-        let window = window_query.get_single().unwrap();
-
-        let random_x = random::<f32>() * window.width();
-        let random_y = random::<f32>() * window.height();
-
-        commands.spawn((
-            SpriteBundle {
-                transform: Transform::from_xyz(random_x, random_y, 0.0),
-                texture: asset_server.load("sprites/ball_red_large.png"),
-                ..default()
-            },
-            Enemy {
-                direction: Vec2::new(random::<f32>(), random::<f32>()).normalize(),
+            Collider::new(ENEMY_SIZE),
+            Velocity {
+                value: Vec3::new(200.0, 200.0, 0.0),
+                damping: 0.0,
+                min_speed: 0.0,
             },
         ));
     }
