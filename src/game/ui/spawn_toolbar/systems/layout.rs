@@ -120,14 +120,14 @@ pub fn build_spawn_toolbar(commands: &mut Commands, asset_server: &Res<AssetServ
                                 background_color: NORMAL_BUTTON.into(),
                                 ..default()
                             },
-                            DefaultButton::Shooter,
+                            DefaultButton::Building(BuldingType::Shooter),
                         ))
                         .with_children(|parent| {
                             parent.spawn(TextBundle {
                                 style: Style { ..default() },
                                 text: Text {
                                     sections: vec![TextSection::new(
-                                        "Shooter",
+                                        "Enemy",
                                         get_button_text_style(&asset_server),
                                     )],
                                     alignment: TextAlignment::Center,

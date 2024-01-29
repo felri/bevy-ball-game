@@ -1,4 +1,6 @@
-use crate::game::{collector::components::Collector, components::Velocity};
+use crate::game::{
+    collector::components::Collector, components::Velocity, enemy::components::Enemy,
+};
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use rand::Rng;
 use std::f32::consts::PI;
@@ -9,7 +11,7 @@ use super::{
 };
 
 pub fn build_or_update_quadtree(
-    mut query: Query<(Entity, &Transform, &mut Collider, &Velocity), Without<Collector>>,
+    mut query: Query<(Entity, &Transform, &mut Collider, &Velocity), With<Debri>>,
     mut universe: ResMut<DebriUniverse>,
 ) {
     universe.graph.clear();
@@ -29,7 +31,7 @@ pub fn build_or_update_quadtree(
 }
 
 pub fn update_debri(
-    mut query: Query<(Entity, &Transform, &mut Collider, &mut Velocity), Without<Collector>>,
+    mut query: Query<(Entity, &Transform, &mut Collider, &mut Velocity), With<Debri>>,
     universe: Res<DebriUniverse>,
     time: Res<Time>,
 ) {
@@ -118,7 +120,7 @@ pub fn update_debri(
 }
 
 pub fn move_system(
-    mut query: Query<(&mut Transform, &Velocity), Without<Collector>>,
+    mut query: Query<(&mut Transform, &Velocity), With<Debri>>,
     universe: Res<DebriUniverse>,
     time: Res<Time>,
 ) {

@@ -42,7 +42,7 @@ impl Plugin for GamePlugin {
             // .add_systems(OnEnter(AppState::Game), pause_simulation)
             // My Plugins
             .add_plugins((
-                // EnemyPlugin,
+                EnemyPlugin,
                 ProjectilePlugin,
                 BuildingPlugin,
                 PlayerPlugin,

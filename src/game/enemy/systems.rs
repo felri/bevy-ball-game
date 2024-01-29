@@ -1,7 +1,8 @@
 use crate::game::{
+    collector::components::Collector,
     components::Velocity,
     debri::{
-        components::{Collected, CollectedEvent},
+        components::{Collected, CollectedEvent, Debri},
         resources::DebriUniverse,
     },
 };
@@ -17,20 +18,19 @@ use super::{
 };
 
 pub fn enemy_movement(
-    mut query: Query<(&mut Transform, &mut Enemy, &Collider, &mut Velocity), Without<Collected>>,
-    mut score: ResMut<Score>,
-    enemy_query: Query<&Collider, With<Enemy>>,
+    mut query: Query<(&mut Transform, &Collider, &mut Velocity), With<Enemy>>,
+    npc_query: Query<&Collider, (With<Enemy>, With<Collector>)>,
     universe: Res<DebriUniverse>,
     time: Res<Time>,
     mut events: EventWriter<CollectedEvent>,
 ) {
     let mut rng = ThreadRng::default();
-    let exclude_ids = enemy_query
+    let exclude_ids = npc_query
         .iter()
         .filter_map(|collider| collider.id.clone())
         .collect::<Vec<_>>();
 
-    for (mut transform, mut enemy, collider, velocity) in query.iter_mut() {
+    for (mut transform, collider, velocity) in query.iter_mut() {
         // -------------------- collision query --------------------
         let query_region = collider
             .into_region(transform.translation)
@@ -43,30 +43,49 @@ pub fn enemy_movement(
             .min_by_key(|body| (transform.translation - body.position).length_squared() as i32)
         {
             let direction = nearest.position - transform.translation;
-            let mut towards = if direction.length() > 0.0 {
-                direction.normalize()
-            } else {
-                Vec3::ZERO
-            };
-            // Add randomness to the movement
-            towards.x += rng.gen_range(-0.2..0.2);
-            towards.y += rng.gen_range(-0.2..0.2);
+            let distance = direction.length();
+            let desired_distance = ENEMY_SIZE * 10.0; // replace X with the desired multiplier
 
-            transform.translation.x += towards.x * time.delta_seconds() * velocity.value.x;
-            transform.translation.y += towards.y * time.delta_seconds() * velocity.value.y;
+            // Only move towards the debris if we are further than the desired distance
+            if distance > desired_distance {
+                let mut towards = if distance > 0.0 {
+                    direction.normalize()
+                } else {
+                    Vec3::ZERO
+                };
+                // Add randomness to the movement
+                towards.x += rng.gen_range(-0.2..0.2);
+                towards.y += rng.gen_range(-0.2..0.2);
+
+                // Interpolate the speed based on the current distance to the target
+                let speed_factor = (distance - desired_distance) / (desired_distance);
+                let interpolated_speed = velocity.value * speed_factor.clamp(0.0, 1.0);
+
+                transform.translation.x += towards.x * time.delta_seconds() * interpolated_speed.x;
+                transform.translation.y += towards.y * time.delta_seconds() * interpolated_speed.y;
+            } else {
+                // If we are too close to the debris, move in the opposite direction
+                let mut away = if distance > 0.0 {
+                    -direction.normalize() // Note the negative sign to move in the opposite direction
+                } else {
+                    Vec3::ZERO
+                };
+
+                // Add randomness to the movement
+                away.x += rng.gen_range(-0.2..0.2);
+                away.y += rng.gen_range(-0.2..0.2);
+
+                let speed_factor = (desired_distance - distance) / (desired_distance);
+                let interpolated_speed = velocity.value * speed_factor.clamp(0.0, 1.0);
+
+                transform.translation.x += away.x * time.delta_seconds() * interpolated_speed.x;
+                transform.translation.y += away.y * time.delta_seconds() * interpolated_speed.y;
+            }
 
             // collision with debri
             let distance = transform.translation.distance(nearest.position);
-            if distance < ENEMY_SIZE {
-                events.send(CollectedEvent {
-                    entity: nearest.entity,
-                });
-
-                enemy.returning = true;
-                enemy.carrying = Some(1.0);
-            } else {
-                enemy.returning = false;
-                enemy.carrying = None;
+            if distance < ENEMY_SIZE * 10.0 {
+                println!("Enemy hit debri");
             }
         }
     }
@@ -88,19 +107,15 @@ pub fn spawn_enemy(
         commands.spawn((
             MaterialMesh2dBundle {
                 mesh: meshes.add(shape::Circle::new(ENEMY_SIZE).into()).into(),
-                material: materials.add(ColorMaterial::from(Color::RED)),
+                material: materials.add(ColorMaterial::from(Color::YELLOW)),
                 transform: Transform::from_xyz(
-                    event.spawn_pos.translation.x,
-                    event.spawn_pos.translation.y,
-                    0.0,
+                    event.position.translation.x,
+                    event.position.translation.y,
+                    1.0,
                 ),
                 ..Default::default()
             },
-            Enemy {
-                stash_pos: event.spawn_pos,
-                returning: false,
-                carrying: None,
-            },
+            Enemy,
             Collider::new(ENEMY_SIZE),
             Velocity {
                 value: Vec3::new(200.0, 200.0, 0.0),

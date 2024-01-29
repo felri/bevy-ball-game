@@ -1,9 +1,7 @@
 use crate::game::{
     components::Velocity,
-    debri::{
-        components::{Collected, CollectedEvent},
-        resources::DebriUniverse,
-    },
+    debri::{components::CollectedEvent, resources::DebriUniverse},
+    enemy::components::Enemy,
 };
 use bevy::{prelude::*, sprite::MaterialMesh2dBundle};
 use rand::prelude::ThreadRng;
@@ -17,18 +15,15 @@ use super::{
 };
 
 pub fn collector_movement(
-    mut query: Query<
-        (&mut Transform, &mut Collector, &Collider, &mut Velocity),
-        Without<Collected>,
-    >,
+    mut query: Query<(&mut Transform, &mut Collector, &Collider, &mut Velocity)>,
     mut score: ResMut<Score>,
-    collector_query: Query<&Collider, With<Collector>>,
+    npc_query: Query<&Collider, (With<Enemy>, With<Collector>)>,
     universe: Res<DebriUniverse>,
     time: Res<Time>,
     mut events: EventWriter<CollectedEvent>,
 ) {
     let mut rng = ThreadRng::default();
-    let exclude_ids = collector_query
+    let exclude_ids = npc_query
         .iter()
         .filter_map(|collider| collider.id.clone())
         .collect::<Vec<_>>();

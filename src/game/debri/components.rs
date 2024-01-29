@@ -55,3 +55,7 @@ pub struct QuadNodeRect;
 pub struct CollectedEvent {
     pub entity: Entity,
 }
+
+pub struct EnemyShotEvenet {
+    pub entity: Entity,
+}

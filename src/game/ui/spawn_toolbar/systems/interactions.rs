@@ -1,20 +1,17 @@
-use bevy::app::AppExit;
 use bevy::prelude::*;
 
 use crate::game::building::components::EventSpawnBuilding;
 use crate::game::collector::components::CollectorSpawnEvent;
+use crate::game::enemy::components::EnemySpawnEvent;
 use crate::game::ui::spawn_toolbar::components::*;
 use crate::game::ui::spawn_toolbar::styles::HOVERED_BUTTON;
 use crate::game::ui::spawn_toolbar::styles::NORMAL_BUTTON;
 use crate::game::ui::spawn_toolbar::styles::PRESSED_BUTTON;
-use crate::game::ui::spawn_toolbar::styles::*;
-use crate::game::SimulationState;
-use crate::AppState;
 
 pub fn interact_with_button(
     mut events_spawn_collector: EventWriter<CollectorSpawnEvent>,
-    // mut events_spawn_shooter: EventWriter<SpawnShooter>,
     mut events_spawn_building: EventWriter<EventSpawnBuilding>,
+    mut events_spawn_enemy: EventWriter<EnemySpawnEvent>,
     mut button_query: Query<
         (&Interaction, &mut BackgroundColor, &DefaultButton),
         (Changed<Interaction>, With<DefaultButton>),
@@ -43,7 +40,9 @@ pub fn interact_with_button(
                             });
                         }
                         BuldingType::Shooter => {
-                            println!("Shooter");
+                            events_spawn_enemy.send(EnemySpawnEvent {
+                                position: Transform::from_xyz(100.0, 100.0, 1.0),
+                            });
                         }
                     },
                 }
