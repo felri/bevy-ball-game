@@ -1,12 +1,4 @@
-# Bevy Ball Game
-
-This project is the companion code to my YouTube video series on learning the basics of the [Bevy Game Engine](https://bevyengine.org), version 0.10.
-
-This project starts in [Learn Bevy 0.10 - EP2 - First Game Setup + Bundles and Resources - Bevy Tutorial](https://youtu.be/izhFutJiZgo)
-
-## Playlist
-
-[Learn Bevy Engine 0.10 Beginner Tutorial Series](https://youtube.com/playlist?list=PLVnntJRoP85JHGX7rGDu6LaF3fmDDbqyd)
+# Bevy Debri Game
 
 # Rust
 
@@ -18,20 +10,7 @@ Build the project with `cargo build`
 
 Run the project with `cargo run`
 
-# Assets 
+# Current state
 
-We're going to be using assets from the [kenney.nl](kenney.nl) website today for our project.
-- Kenney provides amazing assets free to use with a public domain license.
-- If you use their assets often, I highly recommend becoming a [Patreon](https://www.patreon.com/bePatron?u=102131) or [donating](https://kenney.itch.io/kenney-donation).
+https://github.com/felri/bevy-ball-game/assets/56592364/cca1a1ce-6ad1-44cc-8dff-8cd452770d5c
 
-We're going to be using the following assets:
-- https://www.kenney.nl/assets/rolling-ball-assets
-	- `rollingballassets_kenney/PNG/Default/ball_blue_large.png`
-	- `rollingballassets_kenney/PNG/Default/ball_red_large.png`
-	- `rollingballassets_kenney/PNG/Default/star.png`
-- https://www.kenney.nl/assets/sci-fi-sounds
-	- `sci-fi-sounds/Audio/explosionCrunch_000.ogg`
-	- `sci-fi-sounds/Audio/laserLarge_000.ogg`
-- https://www.kenney.nl/assets/interface-sounds
-	- `kenney_interfacesounds/Audio/pluck_001.ogg`
-	- `kenney_interfacesounds/Audio/pluck_002.ogg`
